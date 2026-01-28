@@ -6,6 +6,7 @@ let port = null;
 let io = null;
 let pumpState = false;
 let motorState = "stopped"; // stopped, forward, backward
+let lastSend = 0; // Timestamp of last received data
 
 // Config
 // Config
