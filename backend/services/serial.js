@@ -8,7 +8,8 @@ let pumpState = false;
 let motorState = "stopped"; // stopped, forward, backward
 
 // Config
-const ARDUINO_PORT = process.env.ARDUINO_PORT || 'COM3'; // Default to COM3 for testing, change on Pi
+// Config
+const ARDUINO_PORT = process.env.ARDUINO_PORT || '/dev/ttyS0'; // Default to Pi GPIO
 const BAUD_RATE = parseInt(process.env.ARDUINO_BAUD) || 9600;
 
 function init() {
@@ -29,8 +30,17 @@ function init() {
         });
 
     } catch (err) {
-        console.error('Failed to open Serial Port:', err);
+        console.error('Failed to open Serial Port:', err.message);
+        console.log('⚠️ Starting SIMULATION MODE (Generates fake sensor data)');
+        startSimulation();
     }
+}
+
+function startSimulation() {
+    setInterval(() => {
+        const simData = `M:${400 + Math.floor(Math.random()*100)}|W:${500 + Math.floor(Math.random()*50)}|T:${25 + Math.random()*5}|H:${60 + Math.floor(Math.random()*10)}|O:0`;
+        handleData(simData);
+    }, 2000);
 }
 
 function handleData(line) {

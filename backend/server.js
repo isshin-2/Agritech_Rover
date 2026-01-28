@@ -29,6 +29,11 @@ app.use('/api/sensors', sensorRoutes);
 app.use('/api/rover', roverRoutes);
 app.use('/api/health', healthRoutes);
 
+// Root Route (to prevent Cannot GET / error)
+app.get('/', (req, res) => {
+    res.send('<h1>🚜 AgriROV Backend is Running!</h1><p>The dashboard is running on port 3000.</p>');
+});
+
 // Display Endpoint (Lightweight for ESP32)
 app.get('/api/display/status', (req, res) => {
     // Get latest sensor data
