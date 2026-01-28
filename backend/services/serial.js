@@ -19,9 +19,17 @@ function init() {
 
         port.on('open', () => {
             console.log('Serial Port Opened');
+            // Watchdog: If no data received in 5 seconds, start simulation
+            setTimeout(() => {
+                if (!lastSend) {
+                    console.log('⚠️ Serial Open but Silent. Starting SIMULATION MODE.');
+                    startSimulation();
+                }
+            }, 5000);
         });
 
         parser.on('data', (data) => {
+            lastSend = Date.now(); // Update timestamp
             handleData(data.trim());
         });
         
