@@ -121,24 +121,28 @@ function setPump(on) {
     if (port) port.write(on ? "P:ON\n" : "P:OFF\n");
     pumpState = on;
     logAction(on ? 'pump_on' : 'pump_off', 'success');
+    if(io) io.emit('rover_update', { pump: pumpState, motor: motorState });
 }
 
 function moveForward() {
     if (port) port.write("MOT:F\n");
     motorState = "forward";
     logAction('move_forward', 'success');
+    if(io) io.emit('rover_update', { pump: pumpState, motor: motorState });
 }
 
 function moveBackward() {
     if (port) port.write("MOT:B\n");
     motorState = "backward";
     logAction('move_backward', 'success');
+    if(io) io.emit('rover_update', { pump: pumpState, motor: motorState });
 }
 
 function stopMotors() {
     if (port) port.write("MOT:S\n");
     motorState = "stopped";
     logAction('motor_stop', 'success');
+    if(io) io.emit('rover_update', { pump: pumpState, motor: motorState });
 }
 
 function logAction(action, status) {

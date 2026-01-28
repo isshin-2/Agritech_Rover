@@ -6,8 +6,8 @@ import ControlPanel from './components/ControlPanel';
 import StreamPanel from './components/StreamPanel';
 import HistoryPanel from './components/HistoryPanel';
 
-// Assuming Pi IP, change if needed or use relative if building static
-const API_URL = 'http://localhost:3000'; 
+// Dynamic IP for LAN access, always hit backend port 5000
+const API_URL = `http://${window.location.hostname}:5000`;
 const socket = io(API_URL);
 
 function App() {
@@ -24,6 +24,10 @@ function App() {
     // Socket Updates
     socket.on('sensor_update', (data) => {
       setSensors(data);
+    });
+    
+    socket.on('rover_update', (data) => {
+        setRoverStatus(data);
     });
     
     socket.on('alert', (data) => {
