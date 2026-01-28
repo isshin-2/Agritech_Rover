@@ -29,7 +29,7 @@ fi
 # Start in background using nohup to keep running after shell closes, or just &
 # Using & for now as it's a simple script. 
 # In production, use pm2: pm2 start server.js --name agri_backend
-node server.js > ../backend.log 2>&1 &
+PORT=5000 node server.js > ../backend.log 2>&1 &
 BACKEND_PID=$!
 echo "Backend running (PID: $BACKEND_PID)"
 
