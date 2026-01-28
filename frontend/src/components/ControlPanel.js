@@ -22,22 +22,7 @@ export default function ControlPanel({ apiUrl }) {
                 </div>
             </div>
 
-            <div>
-                <label>Motors:</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px', marginTop: '5px' }}>
-                    <div />
-                    <button onClick={() => sendMotor('forward')} style={{ padding: '15px', background: '#4caf50', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>⬆️</button>
-                    <div />
-                    
-                    <button onClick={() => sendMotor('left')} style={{ padding: '15px', background: '#FFC107', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>⬅️</button>
-                    <button onClick={() => sendMotor('stop')} style={{ padding: '15px', background: '#f44336', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>⏹️</button>
-                    <button onClick={() => sendMotor('right')} style={{ padding: '15px', background: '#FFC107', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>➡️</button>
-                    
-                    <div />
-                    <button onClick={() => sendMotor('backward')} style={{ padding: '15px', background: '#4caf50', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>⬇️</button>
-                    <div />
-                </div>
-            </div>
+            {/* Motor Controls Removed by User Request */}
         </div>
     );
 }
