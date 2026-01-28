@@ -1,0 +1,140 @@
+const { SerialPort } = require('serialport');
+const { ReadlineParser } = require('@serialport/parser-readline');
+const db = require('../database');
+
+let port = null;
+let io = null;
+let pumpState = false;
+let motorState = "stopped"; // stopped, forward, backward
+
+// Config
+const ARDUINO_PORT = process.env.ARDUINO_PORT || 'COM3'; // Default to COM3 for testing, change on Pi
+const BAUD_RATE = parseInt(process.env.ARDUINO_BAUD) || 9600;
+
+function init() {
+    try {
+        port = new SerialPort({ path: ARDUINO_PORT, baudRate: BAUD_RATE });
+        const parser = port.pipe(new ReadlineParser({ delimiter: '\n' }));
+
+        port.on('open', () => {
+            console.log('Serial Port Opened');
+        });
+
+        parser.on('data', (data) => {
+            handleData(data.trim());
+        });
+        
+        port.on('error', (err) => {
+            console.error('Serial Error: ', err.message);
+        });
+
+    } catch (err) {
+        console.error('Failed to open Serial Port:', err);
+    }
+}
+
+function handleData(line) {
+    // Format: "M:450|W:512|T:28.5|H:65|O:0"
+    console.log('RX:', line);
+    
+    const regex = /M:(\d+)\|W:(\d+)\|T:([\d.]+)\|H:(\d+)\|O:(\d)/;
+    const match = line.match(regex);
+    
+    if (match) {
+        const sensors = {
+            soil_moisture: mapValue(parseInt(match[1]), 0, 1023, 0, 100), // Map if needed, user said 0-1023 -> 0-100%
+            water_level: mapValue(parseInt(match[2]), 0, 1023, 0, 100),
+            temperature: parseFloat(match[3]),
+            humidity: mapValue(parseInt(match[4]), 0, 1023, 0, 100), // Assuming analog DHT needs mapping? Or is it direct?
+            // "DHT22 analog equivalent, 0-5V -> 0-100%" implies mapping needed.
+            obstacle_detected: parseInt(match[5]) === 1
+        };
+
+        // SAFETY LOGIC
+        if (sensors.obstacle_detected && motorState !== 'stopped') {
+            console.log('CRITICAL: Obstacle Detected! Stopping Rover.');
+            stopMotors();
+            if(io) io.emit('alert', { type: 'obstacle', message: 'Obstacle Detected! Stopping.' });
+        }
+
+        // AUTO-WATERING LOGIC
+        checkAutoWater(sensors.soil_moisture);
+
+        // Save to DB
+        const stmt = db.prepare(`INSERT INTO sensor_data (soil_moisture, water_level, temperature, humidity, obstacle_detected) VALUES (?, ?, ?, ?, ?)`);
+        stmt.run(sensors.soil_moisture, sensors.water_level, sensors.temperature, sensors.humidity, sensors.obstacle_detected ? 1 : 0);
+        stmt.finalize();
+
+        // Broadcast
+        if (io) io.emit('sensor_update', sensors);
+    }
+}
+
+function checkAutoWater(currentMoisture) {
+    db.get(`SELECT value FROM settings WHERE key = 'auto_water_threshold'`, [], (err, row) => {
+        if (err || !row) return;
+
+        const threshold = parseInt(row.value);
+        
+        if (currentMoisture < threshold && !pumpState) {
+            console.log(`Auto-Water: Moisture ${currentMoisture}% < ${threshold}%. PUMP ON.`);
+            setPump(true);
+            setTimeout(() => {
+                // Safety timeout (2 mins max)
+                if (pumpState) {
+                     console.log('Auto-Water: Safety Timeout. PUMP OFF.');
+                     setPump(false);
+                }
+            }, 120000);
+        } else if (currentMoisture > (threshold + 15) && pumpState) {
+            console.log(`Auto-Water: Moisture ${currentMoisture}% > ${threshold+15}%. PUMP OFF.`);
+            setPump(false);
+        }
+    });
+}
+
+function mapValue(x, in_min, in_max, out_min, out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+// COMMANDS
+function setPump(on) {
+    if (port) port.write(on ? "P:ON\n" : "P:OFF\n");
+    pumpState = on;
+    logAction(on ? 'pump_on' : 'pump_off', 'success');
+}
+
+function moveForward() {
+    if (port) port.write("MOT:F\n");
+    motorState = "forward";
+    logAction('move_forward', 'success');
+}
+
+function moveBackward() {
+    if (port) port.write("MOT:B\n");
+    motorState = "backward";
+    logAction('move_backward', 'success');
+}
+
+function stopMotors() {
+    if (port) port.write("MOT:S\n");
+    motorState = "stopped";
+    logAction('motor_stop', 'success');
+}
+
+function logAction(action, status) {
+    db.run(`INSERT INTO rover_log (action, status) VALUES (?, ?)`, [action, status]);
+}
+
+module.exports = {
+    init,
+    setSocket: (socketIo) => { io = socketIo; },
+    setPump,
+    moveForward,
+    moveBackward,
+    stopMotors,
+    getPumpStatus: () => pumpState
+};
+
+// Start
+init();
