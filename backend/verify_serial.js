@@ -2,7 +2,7 @@ const { SerialPort } = require('serialport');
 const { ReadlineParser } = require('@serialport/parser-readline');
 
 // CONFIG
-const PORT_NAME = '/dev/ttyS0'; // The GPIO Serial Port
+const PORT_NAME = '/dev/ttyUSB0'; // The USB Serial Port
 const BAUD_RATE = 9600;
 
 console.log(`🔌 Testing Connection to Arduino on ${PORT_NAME}...`);

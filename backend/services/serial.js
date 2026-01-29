@@ -10,7 +10,7 @@ let lastSend = 0; // Timestamp of last received data
 
 // Config
 // Config
-const ARDUINO_PORT = process.env.ARDUINO_PORT || '/dev/ttyS0'; // Default to Pi GPIO
+const ARDUINO_PORT = process.env.ARDUINO_PORT || '/dev/ttyUSB0'; // Default to USB
 const BAUD_RATE = parseInt(process.env.ARDUINO_BAUD) || 9600;
 
 function init() {
