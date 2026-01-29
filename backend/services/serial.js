@@ -36,6 +36,11 @@ function init() {
         
         port.on('error', (err) => {
             console.error('Serial Error: ', err.message);
+            // If port fails (e.g. Access Denied on GPIO), fallback to simulation
+            if (!port.isOpen) {
+                console.log('⚠️ Serial Port Failed. Starting SIMULATION MODE.');
+                startSimulation();
+            }
         });
 
     } catch (err) {
