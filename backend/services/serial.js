@@ -67,7 +67,7 @@ function handleData(line) {
     if (match) {
         const sensors = {
             soil_moisture: mapValue(parseInt(match[1]), 0, 1023, 0, 100), // Map if needed, user said 0-1023 -> 0-100%
-            water_level: mapValue(parseInt(match[2]), 0, 1023, 0, 100),
+            is_raining: parseInt(match[2]) === 1, // Changed from water_level (0 or 1)
             temperature: parseFloat(match[3]),
             humidity: mapValue(parseInt(match[4]), 0, 1023, 0, 100), // Assuming analog DHT needs mapping? Or is it direct?
             // "DHT22 analog equivalent, 0-5V -> 0-100%" implies mapping needed.
@@ -85,8 +85,9 @@ function handleData(line) {
         checkAutoWater(sensors.soil_moisture);
 
         // Save to DB
+        // Save to DB (Mapping is_raining to water_level column for now to save schema change)
         const stmt = db.prepare(`INSERT INTO sensor_data (soil_moisture, water_level, temperature, humidity, obstacle_detected) VALUES (?, ?, ?, ?, ?)`);
-        stmt.run(sensors.soil_moisture, sensors.water_level, sensors.temperature, sensors.humidity, sensors.obstacle_detected ? 1 : 0);
+        stmt.run(sensors.soil_moisture, sensors.is_raining ? 100 : 0, sensors.temperature, sensors.humidity, sensors.obstacle_detected ? 1 : 0);
         stmt.finalize();
 
         // Broadcast

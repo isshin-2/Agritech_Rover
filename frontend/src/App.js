@@ -12,7 +12,7 @@ const socket = io(API_URL);
 
 function App() {
   const [sensors, setSensors] = useState({
-    soil_moisture: 0, water_level: 0, temperature: 0, humidity: 0, obstacle_detected: 0
+    soil_moisture: 0, is_raining: false, temperature: 0, humidity: 0, obstacle_detected: 0
   });
   const [health, setHealth] = useState(null);
   const [roverStatus, setRoverStatus] = useState({ pump: false, motor: 'stopped' });

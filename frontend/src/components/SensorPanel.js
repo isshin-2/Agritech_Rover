@@ -16,7 +16,7 @@ export default function SensorPanel({ data }) {
             <Card title="Soil Temp" value={data.soil_temperature} unit="°C" color="#ff9800" />
             <Card title="Air Temp" value={data.air_temperature} unit="°C" color="#ff9800" />
             <Card title="Humidity" value={data.air_humidity} unit="%" color="#00bcd4" />
-            <Card title="Water Level" value={data.water_level} unit="%" color="#2196f3" />
+            <Card title="Rain Status" value={data.is_raining ? "RAINING" : "CLEAR"} unit="" color={data.is_raining ? "#2196f3" : "#4caf50"} />
             
             {data.obstacle_detected ? (
                 <div style={{ gridColumn: '1 / -1', background: '#d32f2f', color: 'white', padding: '10px', borderRadius: '8px', textAlign: 'center', fontWeight: 'bold' }}>
