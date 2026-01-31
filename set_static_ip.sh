@@ -1,25 +1,31 @@
 #!/bin/bash
 
-# Define the static IP details
-INTERFACE="wlan0"
+# Configuration
 STATIC_IP="10.48.169.241/24"
-ROUTER_IP="10.48.169.1"
-DNS_IP="8.8.8.8"
+GATEWAY="10.48.169.1"
+DNS="8.8.8.8"
 
-echo "Setting static IP for $INTERFACE to $STATIC_IP..."
+echo "Detecting active WiFi connection..."
+# Get the connection name for wlan0
+CONN_NAME=$(nmcli -t -f NAME,DEVICE connection show --active | grep wlan0 | cut -d: -f1)
 
-# Backup the original config
-sudo cp /etc/dhcpcd.conf /etc/dhcpcd.conf.backup
+if [ -z "$CONN_NAME" ]; then
+    echo "❌ No active WiFi connection found on wlan0."
+    echo "Please connect to WiFi first."
+    exit 1
+fi
 
-# Append configuration
-echo "" | sudo tee -a /etc/dhcpcd.conf
-echo "interface $INTERFACE" | sudo tee -a /etc/dhcpcd.conf
-echo "static ip_address=$STATIC_IP" | sudo tee -a /etc/dhcpcd.conf
-echo "static routers=$ROUTER_IP" | sudo tee -a /etc/dhcpcd.conf
-echo "static domain_name_servers=$DNS_IP" | sudo tee -a /etc/dhcpcd.conf
+echo "Found connection: '$CONN_NAME'"
+echo "Setting Static IP: $STATIC_IP"
 
-echo "Configuration added."
-echo "Restarting networking service..."
-sudo systemctl restart dhcpcd
+# Configure Static IP
+sudo nmcli con mod "$CONN_NAME" ipv4.addresses $STATIC_IP
+sudo nmcli con mod "$CONN_NAME" ipv4.gateway $GATEWAY
+sudo nmcli con mod "$CONN_NAME" ipv4.dns $DNS
+sudo nmcli con mod "$CONN_NAME" ipv4.method manual
 
-echo "Done! IP should now be fixed to $STATIC_IP"
+echo "Applying changes..."
+sudo nmcli con up "$CONN_NAME"
+
+echo "✅ Done! IP set to $STATIC_IP"
+echo "If disconnected, SSH back into: ssh agritech@10.48.169.241"
