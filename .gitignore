@@ -1,0 +1,21 @@
+# Arduino build artifacts
+*.elf
+*.map
+*.lst
+*.sym
+
+# Node
+node_modules/
+.env
+data.db
+*.log
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+.vscode/
+*.swp
+
+# React build
+dist/
+build/
